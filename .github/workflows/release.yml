@@ -30,6 +30,8 @@ jobs:
           sccache: 'true'
           manylinux: auto
           working-directory: .
+        env:
+          PYO3_PYTHON: python3.13
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
