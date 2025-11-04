@@ -1,59 +1,56 @@
 # TOON Python API
 
-TOON (Token-Oriented Object Notation) 是一个紧凑的、人类可读的数据格式，专为减少传递给大型语言模型的令牌使用量而设计。相比 JSON 格式，TOON 可以减少 30-60% 的令牌使用量。
+TOON (Token-Oriented Object Notation) is a compact, human-readable data format designed to reduce token usage when passing data to large language models. Compared to JSON format, TOON can reduce token usage by 30-60%.
 
-本项目提供了一个 Python API 工具库，后端采用 Rust 实现，通过 PyO3 提供高性能的 Python 绑定。
+This project provides a Python API library with a Rust backend, delivering high-performance Python bindings through PyO3.
 
-## 特性
+## Features
 
-- ✅ **编码和解码**：支持 Python 对象与 TOON 格式之间的双向转换
-- ✅ **表格格式优化**：自动识别统一结构的对象数组，使用表格格式压缩
-- ✅ **多种数组格式**：支持内联数组、表格数组、列表数组和数组的数组
-- ✅ **嵌套结构**：完全支持嵌套对象和数组
-- ✅ **自定义选项**：支持自定义缩进、分隔符和长度标记
-- ✅ **高性能**：Rust 后端提供快速的编码/解码性能
+- ✅ **Encode and Decode**: Bidirectional conversion between Python objects and TOON format
+- ✅ **Table Format Optimization**: Automatically detects uniform object arrays and compresses them using table format
+- ✅ **Multiple Array Formats**: Supports inline arrays, table arrays, list arrays, and arrays of arrays
+- ✅ **Nested Structures**: Full support for nested objects and arrays
+- ✅ **Custom Options**: Supports custom indentation, delimiters, and length markers
+- ✅ **High Performance**: Rust backend provides fast encoding/decoding performance
 
-## 安装
-
-### 方式一：从源码安装（推荐）
+## Installation
 
 ```bash
-# 直接使用 pip 从源码安装
-pip install .
-
-# 或者从 Git 仓库安装
-pip install git+https://github.com/your-username/tost.git
+pip install tost
 ```
 
-**前置要求：**
+**Requirements:**
 - Python 3.8+
-- Rust 1.70+ (pip 会自动安装 maturin 用于构建)
-- Cargo (Rust 构建工具)
 
-### 方式二：开发模式安装
+### Development Installation
+
+If you need to install from source or for development:
 
 ```bash
-# 安装 Rust (如果尚未安装)
+# Install Rust (if not already installed)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# 安装 maturin
+# Install maturin
 pip install maturin
 
-# 开发模式安装 (推荐用于开发)
+# Install from source
+pip install .
+
+# Or install in development mode (recommended for development)
 maturin develop
 
-# 或者构建轮子文件
+# Or build wheel files
 maturin build --release
 ```
 
-## 使用示例
+## Usage Examples
 
-### 基本编码
+### Basic Encoding
 
 ```python
 from tost import encode
 
-# 简单对象
+# Simple object
 obj = {
     "id": 123,
     "name": "Ada Lovelace",
@@ -63,19 +60,19 @@ obj = {
 
 result = encode(obj)
 print(result)
-# 输出:
+# Output:
 # id: 123
 # name: Ada Lovelace
 # email: ada@example.com
 # active: true
 ```
 
-### 表格格式数组
+### Table Format Arrays
 
 ```python
 from tost import encode
 
-# 表格格式数组（自动优化）
+# Table format array (auto-optimized)
 products = {
     "items": [
         {"sku": "LAPTOP-15", "qty": 5, "price": 899.99},
@@ -86,30 +83,30 @@ products = {
 
 result = encode(products)
 print(result)
-# 输出:
+# Output:
 # items[3]{sku,qty,price}:
 #   LAPTOP-15,5,899.99
 #   MOUSE-BT,25,29.99
 #   KEYBOARD-MX,12,149
 ```
 
-### 内联数组
+### Inline Arrays
 
 ```python
 from tost import encode
 
-# 内联数组（原始类型数组）
+# Inline array (primitive type array)
 tags = {
     "tags": ["javascript", "typescript", "nodejs", "llm"]
 }
 
 result = encode(tags)
 print(result)
-# 输出:
+# Output:
 # tags[4]: javascript,typescript,nodejs,llm
 ```
 
-### 嵌套结构
+### Nested Structures
 
 ```python
 from tost import encode
@@ -130,7 +127,7 @@ order = {
 
 result = encode(order)
 print(result)
-# 输出:
+# Output:
 # orderId: ORD-2025-001
 # customer:
 #   name: John Smith
@@ -142,7 +139,7 @@ print(result)
 # tags[2]: priority,gift-wrap
 ```
 
-### 解码
+### Decoding
 
 ```python
 from tost import decode
@@ -158,7 +155,7 @@ items[2]{sku,qty}:
 
 result = decode(tost_str)
 print(result)
-# 输出:
+# Output:
 # {
 #     'id': 123,
 #     'name': 'Ada Lovelace',
@@ -170,7 +167,7 @@ print(result)
 # }
 ```
 
-### 自定义选项
+### Custom Options
 
 ```python
 from tost import encode
@@ -182,36 +179,36 @@ obj = {
     ]
 }
 
-# 自定义缩进、分隔符和长度标记
+# Custom indentation, delimiter, and length marker
 result = encode(
     obj,
-    indent=4,           # 4 空格缩进
-    delimiter="|",       # 使用管道符作为分隔符
-    length_marker="#"     # 使用 # 作为长度标记
+    indent=4,           # 4-space indentation
+    delimiter="|",       # Use pipe as delimiter
+    length_marker="#"     # Use # as length marker
 )
 print(result)
-# 输出:
+# Output:
 # items[#2|]{sku|qty}:
 #     A1|2
 #     B2|1
 ```
 
-## API 参考
+## API Reference
 
 ### `encode(obj, indent=2, delimiter=",", length_marker=None)`
 
-将 Python 对象编码为 TOON 格式字符串。
+Encode a Python object to TOON format string.
 
-**参数：**
-- `obj`: 要编码的 Python 对象（dict、list、原始类型等）
-- `indent` (int, 可选): 每个缩进级别的空格数（默认：2）
-- `delimiter` (str, 可选): 数组值和表格行的分隔符（默认：','）
-- `length_marker` (str, 可选): 数组长度前缀标记（例如：'#'）
+**Parameters:**
+- `obj`: Python object to encode (dict, list, primitive types, etc.)
+- `indent` (int, optional): Number of spaces per indentation level (default: 2)
+- `delimiter` (str, optional): Delimiter for array values and table rows (default: ',')
+- `length_marker` (str, optional): Prefix marker for array length (e.g., '#')
 
-**返回：**
-- `str`: TOON 格式的字符串
+**Returns:**
+- `str`: TOON format string
 
-**示例：**
+**Examples:**
 ```python
 result = encode({"id": 123, "name": "Alice"})
 result = encode(obj, indent=4, delimiter="|", length_marker="#")
@@ -219,30 +216,30 @@ result = encode(obj, indent=4, delimiter="|", length_marker="#")
 
 ### `decode(tost_str)`
 
-将 TOON 格式字符串解码为 Python 对象。
+Decode a TOON format string to Python object.
 
-**参数：**
-- `tost_str` (str): TOON 格式的字符串
+**Parameters:**
+- `tost_str` (str): TOON format string
 
-**返回：**
-- Python 对象（dict、list 或原始类型）
+**Returns:**
+- Python object (dict, list, or primitive type)
 
-**示例：**
+**Examples:**
 ```python
 obj = decode("id: 123\nname: Alice")
 ```
 
-## TOON 格式说明
+## TOON Format Specification
 
-### 对象格式
+### Object Format
 
 ```
 key: value
 ```
 
-### 表格数组格式
+### Table Array Format
 
-当数组中的所有对象具有相同的键且所有值都是原始类型时，使用表格格式：
+When all objects in an array have the same keys and all values are primitive types, table format is used:
 
 ```
 items[N]{field1,field2,field3}:
@@ -250,17 +247,17 @@ items[N]{field1,field2,field3}:
   value4,value5,value6
 ```
 
-### 内联数组格式
+### Inline Array Format
 
-原始类型数组使用内联格式：
+Primitive type arrays use inline format:
 
 ```
 tags[N]: value1,value2,value3
 ```
 
-### 列表格式
+### List Format
 
-混合或非统一数组使用列表格式：
+Mixed or non-uniform arrays use list format:
 
 ```
 items[N]:
@@ -270,7 +267,7 @@ items[N]:
   - value3
 ```
 
-### 数组的数组格式
+### Array of Arrays Format
 
 ```
 pairs[N]:
@@ -278,9 +275,9 @@ pairs[N]:
   - [M]: value3,value4
 ```
 
-### 根级数组
+### Root-Level Arrays
 
-当根级值是数组时，使用无键名的头部形式：
+When the root-level value is an array, use a header form without a key name:
 
 ```
 [N]{field1,field2}:
@@ -288,64 +285,69 @@ pairs[N]:
   value3,value4
 ```
 
-或对于原始类型数组：
+Or for primitive type arrays:
 
 ```
 [N]: value1,value2,value3
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 tost/
-├── Cargo.toml              # Rust 工作空间配置
-├── pyproject.toml          # Python 包配置
-├── README.md                # 项目文档
-├── rust/                    # Rust 核心库
+├── Cargo.toml              # Rust workspace configuration
+├── pyproject.toml          # Python package configuration
+├── README.md                # Project documentation
+├── rust/                    # Rust core library
 │   ├── Cargo.toml
 │   └── src/
-│       ├── lib.rs          # 主库文件（包含 PyO3 绑定）
-│       ├── encode.rs       # TOON 编码实现
-│       └── decode.rs        # TOON 解码实现
-└── python/                  # Python 包
+│       ├── lib.rs          # Main library file (contains PyO3 bindings)
+│       ├── encode.rs       # TOON encoding implementation
+│       └── decode.rs        # TOON decoding implementation
+└── python/                  # Python package
     ├── src/
-    │   └── tost/           # Python 包
+    │   └── tost/           # Python package
     │       ├── __init__.py
-    │       └── tost.py     # Python 接口封装
-    └── tests/              # Python 测试
+    │       └── tost.py     # Python interface wrapper
+    └── tests/              # Python tests
         └── test_tost.py
 ```
 
-## 开发
+## Development
 
-### 运行测试
+### Running Tests
 
 ```bash
-# Rust 测试
+# Rust tests
 cd rust
 cargo test
 
-# Python 测试
+# Python tests
 cd python
 pytest tests/
 ```
 
-### 构建
+### Building
 
 ```bash
-# 开发模式
+# Development mode
 maturin develop
 
-# 发布模式
+# Release mode
 maturin build --release
 ```
 
-## 许可证
+## License
 
 MIT License
 
-## 参考
+## References
 
-- [TOON 格式规范](https://github.com/toon-format/toon)
-- [PyO3 文档](https://pyo3.rs/)
-- [maturin 文档](https://maturin.rs/)
+- [TOON Format Specification](https://github.com/toon-format/toon)
+- [PyO3 Documentation](https://pyo3.rs/)
+- [maturin Documentation](https://maturin.rs/)
+
+## Language
+
+- [English](README.md) (current)
+- [中文](README_CN.md)
