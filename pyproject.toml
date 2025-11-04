@@ -10,7 +10,7 @@ cargo-manifest-path = "rust/Cargo.toml"
 
 [project]
 name = "tost"
-version = "0.1.0"
+version = "0.1.1"
 description = "TOON (Token-Oriented Object Notation) Python API - A compact data format optimized for LLM token usage"
 readme = "README.md"
 requires-python = ">=3.8"
