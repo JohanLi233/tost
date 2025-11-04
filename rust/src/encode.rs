@@ -23,7 +23,13 @@ pub fn encode(value: &Value, options: &EncodeOptions) -> String {
     result
 }
 
-fn encode_value(value: &Value, options: &EncodeOptions, level: usize, key: Option<&str>, output: &mut String) {
+fn encode_value(
+    value: &Value,
+    options: &EncodeOptions,
+    level: usize,
+    key: Option<&str>,
+    output: &mut String,
+) {
     match value {
         Value::Null => {
             output.push_str("null");
@@ -55,7 +61,13 @@ fn encode_value(value: &Value, options: &EncodeOptions, level: usize, key: Optio
     }
 }
 
-fn encode_array(arr: &[Value], options: &EncodeOptions, level: usize, key: Option<&str>, output: &mut String) {
+fn encode_array(
+    arr: &[Value],
+    options: &EncodeOptions,
+    level: usize,
+    key: Option<&str>,
+    output: &mut String,
+) {
     if arr.is_empty() {
         let indent_str = " ".repeat(level * options.indent);
         let mut len_str = if let Some(marker) = options.length_marker {
@@ -77,7 +89,7 @@ fn encode_array(arr: &[Value], options: &EncodeOptions, level: usize, key: Optio
         }
         return;
     }
-    
+
     // Check if all elements are objects with the same keys (tabular format)
     if let Some(keys) = check_tabular_format(arr) {
         encode_tabular_array(arr, keys, options, level, key, output);
@@ -85,7 +97,7 @@ fn encode_array(arr: &[Value], options: &EncodeOptions, level: usize, key: Optio
     }
 
     // Check if all elements are primitives (inline format)
-    if arr.iter().all(|v| is_primitive(v)) {
+    if arr.iter().all(is_primitive) {
         encode_inline_array(arr, options, level, key, output);
         return;
     }
@@ -222,7 +234,13 @@ fn encode_tabular_value(value: &Value, options: &EncodeOptions, output: &mut Str
     }
 }
 
-fn encode_inline_array(arr: &[Value], options: &EncodeOptions, level: usize, key: Option<&str>, output: &mut String) {
+fn encode_inline_array(
+    arr: &[Value],
+    options: &EncodeOptions,
+    level: usize,
+    key: Option<&str>,
+    output: &mut String,
+) {
     let indent_str = " ".repeat(level * options.indent);
     let mut len_str = if let Some(marker) = options.length_marker {
         format!("{}{}", marker, arr.len())
@@ -314,7 +332,13 @@ fn encode_array_of_arrays(
     }
 }
 
-fn encode_list_array(arr: &[Value], options: &EncodeOptions, level: usize, key: Option<&str>, output: &mut String) {
+fn encode_list_array(
+    arr: &[Value],
+    options: &EncodeOptions,
+    level: usize,
+    key: Option<&str>,
+    output: &mut String,
+) {
     let indent_str = " ".repeat(level * options.indent);
     let mut len_str = if let Some(marker) = options.length_marker {
         format!("{}{}", marker, arr.len())
@@ -364,7 +388,12 @@ fn encode_list_array(arr: &[Value], options: &EncodeOptions, level: usize, key: 
     }
 }
 
-fn encode_object(obj: &serde_json::Map<String, Value>, options: &EncodeOptions, level: usize, output: &mut String) {
+fn encode_object(
+    obj: &serde_json::Map<String, Value>,
+    options: &EncodeOptions,
+    level: usize,
+    output: &mut String,
+) {
     let indent_str = " ".repeat(level * options.indent);
     let mut first = true;
 
@@ -397,7 +426,10 @@ fn encode_object(obj: &serde_json::Map<String, Value>, options: &EncodeOptions, 
 }
 
 fn is_primitive(value: &Value) -> bool {
-    matches!(value, Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_))
+    matches!(
+        value,
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_)
+    )
 }
 
 fn quote_string(s: &str, delimiter: char) -> String {
@@ -415,7 +447,12 @@ fn quote_string(s: &str, delimiter: char) -> String {
         || s == "true"
         || s == "false"
         || s == "null"
-        || (s.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) && s.parse::<f64>().is_ok());
+        || (s
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_digit())
+            .unwrap_or(false)
+            && s.parse::<f64>().is_ok());
 
     if !needs_quotes {
         return s.to_string();

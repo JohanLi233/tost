@@ -1,12 +1,13 @@
-mod encode;
-mod decode;
+#![allow(clippy::useless_conversion)]
 
-pub use encode::{encode, EncodeOptions};
+mod decode;
+mod encode;
+
 pub use decode::decode;
+pub use encode::{encode, EncodeOptions};
 
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
-use pyo3::PyObject;
 use serde_json::Value;
 
 /// Python module for TOON encoding and decoding
@@ -30,10 +31,11 @@ fn encode_py(
         // Convert Python object to JSON Value
         let value = convert_python_to_json(&obj)?;
 
-        let mut options = encode::EncodeOptions::default();
-        options.indent = indent;
-        options.delimiter = delimiter.chars().next().unwrap_or(',');
-        options.length_marker = length_marker.and_then(|s| s.chars().next());
+        let options = encode::EncodeOptions {
+            indent,
+            delimiter: delimiter.chars().next().unwrap_or(','),
+            length_marker: length_marker.and_then(|s| s.chars().next()),
+        };
 
         Ok(encode::encode(&value, &options))
     })
@@ -43,8 +45,8 @@ fn encode_py(
 #[pyfunction]
 fn decode_py(toon_str: &str) -> PyResult<PyObject> {
     Python::with_gil(|py| {
-        let value = decode::decode(toon_str)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e))?;
+        let value =
+            decode::decode(toon_str).map_err(PyErr::new::<pyo3::exceptions::PyValueError, _>)?;
 
         Ok(convert_json_to_python(py, &value)?.into())
     })
@@ -69,7 +71,7 @@ fn convert_python_to_json(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     // Handle float
     if let Ok(f) = obj.extract::<f64>() {
         return Ok(Value::Number(
-            serde_json::Number::from_f64(f).unwrap_or(0.into())
+            serde_json::Number::from_f64(f).unwrap_or(0.into()),
         ));
     }
 

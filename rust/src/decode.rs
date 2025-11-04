@@ -1,6 +1,6 @@
-use serde_json::{Map, Value};
-use regex::Regex;
 use lazy_static::lazy_static;
+use regex::Regex;
+use serde_json::{Map, Value};
 
 lazy_static! {
     // key[len[delim]]{fields}:
@@ -50,7 +50,7 @@ fn decode_array_root(lines: &[&str], start: usize) -> Result<(usize, Value), Str
     }
 
     let first_line = lines[start].trim();
-    
+
     // Parse [N]: format (support inline by parsing header slice)
     let header_slice = if let Some(cp) = first_line.find(':') {
         &first_line[..=cp]
@@ -58,8 +58,6 @@ fn decode_array_root(lines: &[&str], start: usize) -> Result<(usize, Value), Str
         first_line
     };
     if let Some((len, delim_opt)) = parse_array_header(header_slice) {
-        let len = len;
-        
         // Check if it's inline format (same line)
         if first_line.contains(':') {
             let colon_pos = first_line.find(':').unwrap();
@@ -74,7 +72,7 @@ fn decode_array_root(lines: &[&str], start: usize) -> Result<(usize, Value), Str
         let mut items = Vec::new();
         let mut i = start + 1;
         let mut count = 0;
-        
+
         while i < lines.len() && count < len {
             let line = lines[i].trim();
             if line.starts_with("- ") {
@@ -102,21 +100,21 @@ fn decode_object_entry(lines: &[&str], start: usize) -> Result<(usize, String, V
 
     let line = lines[start];
     let trimmed = line.trim();
-    
+
     // Check for tabular format: key[N]{field1,field2}:
     // First check if this line has a tabular header (might be indented)
     if let Some((key, len, delim_opt, fields)) = parse_tabular_header(trimmed) {
         let mut items = Vec::new();
         let mut i = start + 1;
         let mut count = 0;
-        
+
         while i < lines.len() && count < len {
             let row_line = lines[i].trim();
             if row_line.is_empty() {
                 i += 1;
                 continue;
             }
-            
+
             let obj = decode_tabular_row(row_line, &fields, delim_opt)?;
             items.push(Value::Object(obj));
             i += 1;
@@ -125,7 +123,7 @@ fn decode_object_entry(lines: &[&str], start: usize) -> Result<(usize, String, V
 
         return Ok((i - start, key, Value::Array(items)));
     }
-    
+
     // Check if next line is a tabular header (for nested objects)
     // This handles cases like:
     //   items:
@@ -135,12 +133,12 @@ fn decode_object_entry(lines: &[&str], start: usize) -> Result<(usize, String, V
     if start + 1 < lines.len() {
         let current_line = lines[start].trim();
         let next_line = lines[start + 1].trim();
-        
+
         // Check if current line is a simple key: value line
         if let Some(colon_pos) = current_line.find(':') {
             let current_key = current_line[..colon_pos].trim();
             let after_colon = current_line[colon_pos + 1..].trim();
-            
+
             // If current line is just "key:" (no value), and next line is a tabular header
             if after_colon.is_empty() {
                 if let Some((_key, len, delim_opt, fields)) = parse_tabular_header(next_line) {
@@ -148,20 +146,20 @@ fn decode_object_entry(lines: &[&str], start: usize) -> Result<(usize, String, V
                     let mut items = Vec::new();
                     let mut i = start + 2;
                     let mut count = 0;
-                    
+
                     while i < lines.len() && count < len {
                         let row_line = lines[i].trim();
                         if row_line.is_empty() {
                             i += 1;
                             continue;
                         }
-                        
+
                         let obj = decode_tabular_row(row_line, &fields, delim_opt)?;
                         items.push(Value::Object(obj));
                         i += 1;
                         count += 1;
                     }
-                    
+
                     return Ok((i - start, current_key.to_string(), Value::Array(items)));
                 }
             }
@@ -169,7 +167,11 @@ fn decode_object_entry(lines: &[&str], start: usize) -> Result<(usize, String, V
     }
 
     // Check for array format: key[N]: (support inline by parsing header slice)
-    let header_slice = if let Some(cp) = trimmed.find(':') { &trimmed[..=cp] } else { trimmed };
+    let header_slice = if let Some(cp) = trimmed.find(':') {
+        &trimmed[..=cp]
+    } else {
+        trimmed
+    };
     if let Some((key, len, delim_opt)) = parse_array_header_with_key(header_slice) {
         // Check if inline format
         if trimmed.contains(':') {
@@ -306,7 +308,11 @@ fn parse_array_header(line: &str) -> Option<(usize, Option<char>)> {
     Some((len, delim_opt))
 }
 
-fn decode_tabular_row(line: &str, fields: &[String], delim_opt: Option<char>) -> Result<Map<String, Value>, String> {
+fn decode_tabular_row(
+    line: &str,
+    fields: &[String],
+    delim_opt: Option<char>,
+) -> Result<Map<String, Value>, String> {
     // Prefer header's delimiter, fallback to scanning
     let delimiter = if let Some(d) = delim_opt {
         d
@@ -320,7 +326,11 @@ fn decode_tabular_row(line: &str, fields: &[String], delim_opt: Option<char>) ->
 
     let values: Vec<&str> = line.split(delimiter).map(|s| s.trim()).collect();
     if values.len() != fields.len() {
-        return Err(format!("Row has {} values but expected {}", values.len(), fields.len()));
+        return Err(format!(
+            "Row has {} values but expected {}",
+            values.len(),
+            fields.len()
+        ));
     }
 
     let mut obj = Map::new();
@@ -346,7 +356,11 @@ fn decode_inline_array(line: &str, len: usize, delim_opt: Option<char>) -> Resul
 
     let values: Vec<&str> = line.split(delimiter).map(|s| s.trim()).collect();
     if values.len() != len {
-        return Err(format!("Array has {} values but expected {}", values.len(), len));
+        return Err(format!(
+            "Array has {} values but expected {}",
+            values.len(),
+            len
+        ));
     }
 
     let mut items = Vec::new();
@@ -360,16 +374,16 @@ fn decode_inline_array(line: &str, len: usize, delim_opt: Option<char>) -> Resul
 fn decode_array_of_arrays_item(line: &str) -> Result<Value, String> {
     // Format: - [N]: value1,value2,...
     let trimmed = line.strip_prefix("- ").unwrap_or(line).trim();
-    
+
     if let Some(colon_pos) = trimmed.find(':') {
         let header = &trimmed[..colon_pos];
         let values_str = &trimmed[colon_pos + 1..].trim();
-        
+
         if let Some((len, delim_opt)) = parse_array_header(&format!("{}:", header)) {
             return decode_inline_array(values_str, len, delim_opt);
         }
     }
-    
+
     Err(format!("Invalid array of arrays format: {}", line))
 }
 
@@ -392,7 +406,7 @@ fn decode_list_item(lines: &[&str], start: usize) -> Result<(Value, usize), Stri
     let value_str = trimmed[colon_pos + 1..].trim();
 
     let mut obj = Map::new();
-    
+
     if !value_str.is_empty() {
         let value = decode_value(value_str)?;
         obj.insert(key, value);
@@ -403,11 +417,11 @@ fn decode_list_item(lines: &[&str], start: usize) -> Result<(Value, usize), Stri
     // Check for more fields on next lines
     let indent = get_indent_level(lines[start]);
     let mut i = start + 1;
-    
+
     while i < lines.len() {
         let next_line = lines[i];
         let next_indent = get_indent_level(next_line);
-        
+
         if next_indent <= indent {
             break;
         }
@@ -416,29 +430,33 @@ fn decode_list_item(lines: &[&str], start: usize) -> Result<(Value, usize), Stri
         if let Some(colon_pos) = trimmed_line.find(':') {
             let key = trimmed_line[..colon_pos].trim().to_string();
             let value_str = trimmed_line[colon_pos + 1..].trim();
-            
+
             let value = if !value_str.is_empty() {
                 decode_value(value_str)?
             } else {
                 Value::Null
             };
-            
+
             obj.insert(key, value);
         }
-        
+
         i += 1;
     }
 
     Ok((Value::Object(obj), i - start))
 }
 
-fn decode_nested_value(lines: &[&str], start: usize, _parent_indent: usize) -> Result<(usize, Value), String> {
+fn decode_nested_value(
+    lines: &[&str],
+    start: usize,
+    _parent_indent: usize,
+) -> Result<(usize, Value), String> {
     if start >= lines.len() {
         return Err("Unexpected end of input".to_string());
     }
 
     let first_line = lines[start].trim();
-    
+
     // Check if it's an array
     if first_line.starts_with('[') || first_line.contains('[') {
         return decode_array_root(lines, start);
@@ -452,7 +470,7 @@ fn decode_nested_value(lines: &[&str], start: usize, _parent_indent: usize) -> R
     while i < lines.len() {
         let line = lines[i];
         let line_indent = get_indent_level(line);
-        
+
         if line_indent < indent {
             break;
         }
@@ -498,12 +516,12 @@ fn decode_nested_value(lines: &[&str], start: usize, _parent_indent: usize) -> R
 
 fn decode_value(s: &str) -> Result<Value, String> {
     let trimmed = s.trim();
-    
+
     // Null
     if trimmed == "null" {
         return Ok(Value::Null);
     }
-    
+
     // Boolean
     if trimmed == "true" {
         return Ok(Value::Bool(true));
@@ -511,7 +529,7 @@ fn decode_value(s: &str) -> Result<Value, String> {
     if trimmed == "false" {
         return Ok(Value::Bool(false));
     }
-    
+
     // String (quoted)
     if trimmed.starts_with('"') && trimmed.ends_with('"') {
         let unquoted = &trimmed[1..trimmed.len() - 1];
@@ -523,15 +541,17 @@ fn decode_value(s: &str) -> Result<Value, String> {
             .replace("\\t", "\t");
         return Ok(Value::String(unescaped));
     }
-    
+
     // Number
     if let Ok(i) = trimmed.parse::<i64>() {
         return Ok(Value::Number(i.into()));
     }
     if let Ok(f) = trimmed.parse::<f64>() {
-        return Ok(Value::Number(serde_json::Number::from_f64(f).unwrap_or(0.into())));
+        return Ok(Value::Number(
+            serde_json::Number::from_f64(f).unwrap_or(0.into()),
+        ));
     }
-    
+
     // Unquoted string
     Ok(Value::String(trimmed.to_string()))
 }
@@ -539,7 +559,6 @@ fn decode_value(s: &str) -> Result<Value, String> {
 fn get_indent_level(line: &str) -> usize {
     line.chars().take_while(|c| c.is_whitespace()).count()
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -615,8 +634,14 @@ mod tests {
             Value::Object(map) => {
                 let arr = map.get("matrix").unwrap().as_array().unwrap();
                 assert_eq!(arr.len(), 2);
-                assert_eq!(arr[0], Value::Array(vec![Value::Number(1.into()), Value::Number(2.into())]));
-                assert_eq!(arr[1], Value::Array(vec![Value::Number(3.into()), Value::Number(4.into())]));
+                assert_eq!(
+                    arr[0],
+                    Value::Array(vec![Value::Number(1.into()), Value::Number(2.into())])
+                );
+                assert_eq!(
+                    arr[1],
+                    Value::Array(vec![Value::Number(3.into()), Value::Number(4.into())])
+                );
             }
             _ => panic!("expected object"),
         }

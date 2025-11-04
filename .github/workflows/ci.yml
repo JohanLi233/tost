@@ -27,11 +27,13 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build and test
+      - name: Build and install
         run: |
           pip install maturin pytest
-          maturin develop
-          pytest python/tests/ -v
+          pip install .
+
+      - name: Run tests
+        run: pytest python/tests/ -v
 
   lint:
     runs-on: ubuntu-latest
