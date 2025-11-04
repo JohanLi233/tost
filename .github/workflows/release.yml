@@ -20,18 +20,18 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist
           sccache: 'true'
           manylinux: auto
           working-directory: .
         env:
-          PYO3_PYTHON: python3.13
+          PYO3_PYTHON: python3.12
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -49,16 +49,18 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
           architecture: ${{ matrix.target }}
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist
           sccache: 'true'
           working-directory: .
+        env:
+          PYO3_PYTHON: python
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -76,15 +78,17 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist
           sccache: 'true'
           working-directory: .
+        env:
+          PYO3_PYTHON: python3.12
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4

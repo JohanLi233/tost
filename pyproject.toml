@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [tool.maturin]
 module-name = "tost._tost"
-bindings = "pyo3"
+bindings = "pyo3-abi3"
 python-source = "python/src"
 cargo-manifest-path = "rust/Cargo.toml"
 
